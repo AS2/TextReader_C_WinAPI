@@ -28,10 +28,10 @@ struct winDrawer {
 
   line_t* lines;                        // lines pointer (after init: massive)
   unsigned int linesCnt,                // lines count
-    totalLinesInWin;         // total different lines count
+               totalLinesInWin;         // total different lines count
 
   unsigned int lineStart,               // number of line, where placed started subline
-    sublineStart;            // number of started subline in line
+               sublineStart;            // number of started subline in line
 };
 
 // model view initialization function

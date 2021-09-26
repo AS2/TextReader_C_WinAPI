@@ -1,6 +1,7 @@
 #include "winDrawer.h"
 
 #define MIN(A, B) A > B ? B : A
+#define MAX(A, B) A > B ? A : B
 
 int WD_Init(winDrawer_t* wd, textReader_t tr, int winW, int winH, HWND hwnd) {
   int i, lastBeginIndex = 0, lineIndex = 0, linesInReserv = 0, wasCharacter = 0;
@@ -127,10 +128,17 @@ int WD_ReparseText(textReader_t tr, winDrawer_t* wd) {
   if (wd->lines[wd->lineStart].linesInWindowSize - 1 < wd->sublineStart)
     wd->sublineStart = wd->lines[wd->lineStart].linesInWindowSize - 1;
 
+  // count new scroll position
   int yCoordToReturn = 0;
   for (i = 0; i < wd->lineStart; i++)
     yCoordToReturn += wd->lines[i].linesInWindowSize;
   yCoordToReturn += wd->sublineStart;
+
+  // shift strings down to remove empty space, which created at the end of file
+  if (wd->totalLinesInWin - yCoordToReturn < wd->linesInWindow) {
+    WD_ShiftTextPosition(wd, wd->linesInWindow - (wd->totalLinesInWin - yCoordToReturn), -1);
+    yCoordToReturn = MAX(yCoordToReturn - (wd->linesInWindow - (wd->totalLinesInWin - yCoordToReturn)), 0);
+  }
 
   return yCoordToReturn;
 }
