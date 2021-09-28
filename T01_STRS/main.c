@@ -10,8 +10,6 @@
 
 #include "textReader/textReader.h"
 #include "winDrawer/winDrawer.h"
-//#include "textReader.h"
-//#include "winDrawer.h"
 
 #define SIGN(X) X < 0 ? -1 : 1
 
@@ -93,6 +91,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
   static textReader_t tr;
   static winDrawer_t wd;
   static SCROLLINFO si;
+  static int yLength, yPos;
 
   switch (message)                  /* handle the messages */
   {
@@ -119,16 +118,31 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     }
 
     // make first text parse
-    int yPos = WD_ReparseText(tr, &wd);
+    WD_ReparseText(&wd);
+    yLength = wd.totalLinesInWin - 1;
+    yPos = wd.yScrollCoord;
 
     // fill vert scroll info
     si.cbSize = sizeof(si);
     si.fMask = SIF_RANGE | SIF_PAGE;
     si.nMin = 0;
-    si.nPos = yPos;
+    si.nPos = wd.yScrollCoord;
     si.nMax = wd.totalLinesInWin - 1;
     si.nPage = wd.linesInWindow;
     SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+
+    if (wd.modelViewType == MV_FORMATED)
+        ShowScrollBar(hwnd, SB_HORZ, FALSE);
+    else {
+      // fill horiz scroll info
+      si.cbSize = sizeof(si);
+      si.fMask = SIF_RANGE | SIF_PAGE;
+      si.nMin = 0;
+      si.nPos = wd.xScrollCoord;
+      si.nMax = wd.maxLineLength - 1;
+      si.nPage = wd.symbolsPerWindowLine;
+      SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+    }
 
     break;
   }
@@ -168,25 +182,133 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
       InvalidateRect(hwnd, NULL, TRUE);
       UpdateWindow(hwnd);
     }
+    break;
   }
 
-                 // Load text to draw then resize window
+  case WM_HSCROLL: {
+    si.fMask = SIF_ALL;
+    GetScrollInfo(hwnd, SB_HORZ, &si);
+    int scrPos = si.nPos;
+
+    switch (LOWORD(wParam)) {
+    case SB_LINELEFT:
+      si.nPos -= 1;
+      break;
+    case SB_LINERIGHT:
+      si.nPos += 1;
+      break;
+    case SB_PAGELEFT:
+      si.nPos -= si.nPage;
+      break;
+    case SB_PAGERIGHT:
+      si.nPos += si.nPage;
+      break;
+    case SB_THUMBTRACK:
+      si.nPos = si.nTrackPos;
+      break;
+    default:
+      break;
+    }
+
+    si.fMask = SIF_POS;
+    SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+    GetScrollInfo(hwnd, SB_HORZ, &si);
+
+    if (si.nPos != scrPos) {
+      int sign = SIGN(si.nPos - scrPos);
+      WD_ShiftLineStart(&wd, (si.nPos - scrPos) * sign, sign);
+      InvalidateRect(hwnd, NULL, TRUE);
+      UpdateWindow(hwnd);
+    }
+    break;
+  }
+
+  case WM_KEYDOWN: {
+    switch(wParam) {
+    case 'S':
+    case 's':
+      WD_SwitchType(&wd);
+      WD_ReparseText(&wd);
+
+      if (wd.modelViewType == MV_FORMATED) {
+        yLength = wd.totalLinesInWin - 1;
+        yPos = wd.yScrollCoord;
+        ShowScrollBar(hwnd, SB_HORZ, FALSE);
+      }
+      else {
+        yLength = wd.linesCnt - 1;
+        yPos = wd.lineStart;
+        ShowScrollBar(hwnd, SB_HORZ, TRUE);
+      }
+
+      // fill vert scroll info
+      si.cbSize = sizeof(si);
+      si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+      si.nMin = 0;
+      si.nMax = yLength;
+      si.nPos = yPos;
+      si.nPage = wd.linesInWindow;
+      SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+
+      if (wd.modelViewType == MV_FORMATED)
+        ShowScrollBar(hwnd, SB_HORZ, FALSE);
+      else {
+        // fill horiz scroll info
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_RANGE | SIF_PAGE;
+        si.nMin = 0;
+        si.nPos = wd.xScrollCoord;
+        si.nMax = wd.maxLineLength - 1;
+        si.nPage = wd.symbolsPerWindowLine;
+        SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+      }
+
+      // draw text
+      InvalidateRect(hwnd, NULL, TRUE);
+      UpdateWindow(hwnd);
+    }
+    break;
+  }
+
+  // Load text to draw then resize window
   case WM_SIZE: {
     WD_UpdateSizes(&wd, LOWORD(lParam), HIWORD(lParam));
 
     // reread, if params changed
     if (WD_IsNeedToReparse(wd) == 1) {
       // repars symbols
-      int newPos = WD_ReparseText(tr, &wd);
+      WD_ReparseText(&wd);
+
+      if (wd.modelViewType == MV_FORMATED) {
+        yLength = wd.totalLinesInWin - 1;
+        yPos = wd.yScrollCoord;
+      }
+      else {
+        yLength = wd.linesCnt - 1;
+        yPos = wd.lineStart;
+      }
 
       // fill vert scroll info
       si.cbSize = sizeof(si);
       si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
       si.nMin = 0;
-      si.nMax = wd.totalLinesInWin - 1;
-      si.nPos = newPos;
+      si.nMax = yLength;
+      si.nPos = yPos;
       si.nPage = wd.linesInWindow;
       SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+
+      if (wd.modelViewType == MV_FORMATED)
+        ShowScrollBar(hwnd, SB_HORZ, FALSE);
+      else {
+        // fill horiz scroll info
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_RANGE | SIF_PAGE;
+        si.nMin = 0;
+        si.nPos = wd.xScrollCoord;
+        si.nMax = wd.maxLineLength - 1;
+        si.nPage = wd.symbolsPerWindowLine;
+        SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+      }
 
       // draw text
       InvalidateRect(hwnd, NULL, TRUE);
