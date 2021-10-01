@@ -102,7 +102,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     break;
   }
 
-  // Load file then create window
+                 // Load file then create window
   case WM_CREATE: {
     CREATESTRUCT* tmpStrct = (CREATESTRUCT*)lParam;
 
@@ -117,33 +117,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
       PostQuitMessage(0);
     }
 
-    // make first text parse
-    WD_ReparseText(&wd);
-    yLength = wd.totalLinesInWin - 1;
-    yPos = wd.yScrollCoord;
-
-    // fill vert scroll info
-    si.cbSize = sizeof(si);
-    si.fMask = SIF_RANGE | SIF_PAGE;
-    si.nMin = 0;
-    si.nPos = wd.yScrollCoord;
-    si.nMax = wd.totalLinesInWin - 1;
-    si.nPage = wd.linesInWindow;
-    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-
-    if (wd.modelViewType == MV_FORMATED)
-        ShowScrollBar(hwnd, SB_HORZ, FALSE);
-    else {
-      // fill horiz scroll info
-      si.cbSize = sizeof(si);
-      si.fMask = SIF_RANGE | SIF_PAGE;
-      si.nMin = 0;
-      si.nPos = wd.xScrollCoord;
-      si.nMax = wd.maxLineLength - 1;
-      si.nPage = wd.symbolsPerWindowLine;
-      SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-    }
-
+    WD_ReplaceScrolls(hwnd, wd);
     break;
   }
 
@@ -224,45 +198,13 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
   }
 
   case WM_KEYDOWN: {
-    switch(wParam) {
+    switch (wParam) {
     case 'S':
     case 's':
-      WD_SwitchType(&wd);
+      WD_SwitchType(&wd, hwnd);
       WD_ReparseText(&wd);
 
-      if (wd.modelViewType == MV_FORMATED) {
-        yLength = wd.totalLinesInWin - 1;
-        yPos = wd.yScrollCoord;
-        ShowScrollBar(hwnd, SB_HORZ, FALSE);
-      }
-      else {
-        yLength = wd.linesCnt - 1;
-        yPos = wd.lineStart;
-        ShowScrollBar(hwnd, SB_HORZ, TRUE);
-      }
-
-      // fill vert scroll info
-      si.cbSize = sizeof(si);
-      si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-      si.nMin = 0;
-      si.nMax = yLength;
-      si.nPos = yPos;
-      si.nPage = wd.linesInWindow;
-      SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-
-      if (wd.modelViewType == MV_FORMATED)
-        ShowScrollBar(hwnd, SB_HORZ, FALSE);
-      else {
-        // fill horiz scroll info
-        si.cbSize = sizeof(si);
-        si.fMask = SIF_RANGE | SIF_PAGE;
-        si.nMin = 0;
-        si.nPos = wd.xScrollCoord;
-        si.nMax = wd.maxLineLength - 1;
-        si.nPage = wd.symbolsPerWindowLine;
-        SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-      }
-
+      WD_ReplaceScrolls(hwnd, wd);
       // draw text
       InvalidateRect(hwnd, NULL, TRUE);
       UpdateWindow(hwnd);
@@ -270,7 +212,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     break;
   }
 
-  // Load text to draw then resize window
+                 // Load text to draw then resize window
   case WM_SIZE: {
     WD_UpdateSizes(&wd, LOWORD(lParam), HIWORD(lParam));
 
@@ -279,36 +221,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
       // repars symbols
       WD_ReparseText(&wd);
 
-      if (wd.modelViewType == MV_FORMATED) {
-        yLength = wd.totalLinesInWin - 1;
-        yPos = wd.yScrollCoord;
-      }
-      else {
-        yLength = wd.linesCnt - 1;
-        yPos = wd.lineStart;
-      }
-
-      // fill vert scroll info
-      si.cbSize = sizeof(si);
-      si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-      si.nMin = 0;
-      si.nMax = yLength;
-      si.nPos = yPos;
-      si.nPage = wd.linesInWindow;
-      SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-
-      if (wd.modelViewType == MV_FORMATED)
-        ShowScrollBar(hwnd, SB_HORZ, FALSE);
-      else {
-        // fill horiz scroll info
-        si.cbSize = sizeof(si);
-        si.fMask = SIF_RANGE | SIF_PAGE;
-        si.nMin = 0;
-        si.nPos = wd.xScrollCoord;
-        si.nMax = wd.maxLineLength - 1;
-        si.nPage = wd.symbolsPerWindowLine;
-        SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-      }
+      WD_ReplaceScrolls(hwnd, wd);
 
       // draw text
       InvalidateRect(hwnd, NULL, TRUE);

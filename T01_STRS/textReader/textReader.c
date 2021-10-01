@@ -1,5 +1,9 @@
 #include "textReader.h"
 
+// text view initialization function
+// ARGS: textReader_t *tr - text view to init
+//       const char *filename - file name to open
+// RETURNS: 0 - fail, 1 - success
 int TR_InitText(textReader_t* tr, const char* filename) {
   FILE *F;
 
@@ -20,6 +24,9 @@ int TR_InitText(textReader_t* tr, const char* filename) {
   return 1;
 }
 
+// text view destroy
+// ARGS: textReader_t *tr - text view to destroy
+// RETURNS: none.
 void TR_ClearText(textReader_t* tr) {
     if (tr->textBuf != NULL)
         free(tr->textBuf);

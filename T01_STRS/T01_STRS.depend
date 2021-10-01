@@ -1,26 +1,26 @@
 # depslib dependency file v1.0
-1632869359 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\main.c
+1633120291 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\main.c
 	<tchar.h>
 	<windows.h>
 	<stdio.h>
 	"textReader/textReader.h"
 	"winDrawer/winDrawer.h"
 
-1632065962 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.h
+1633125314 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.h
 	<stdio.h>
 	<stdlib.h>
 
-1632864087 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.h
+1633125298 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.h
 	<windows.h>
 	<tchar.h>
 	<stdio.h>
 	<stdlib.h>
 	"../textReader/textReader.h"
 
-1631897723 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.c
+1633115381 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.c
 	"textReader.h"
 
-1632869801 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.c
+1633125329 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.c
 	"winDrawer.h"
 
 1631897723 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader.c

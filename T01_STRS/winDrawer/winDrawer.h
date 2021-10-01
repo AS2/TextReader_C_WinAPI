@@ -9,7 +9,7 @@
 
 #include "../textReader/textReader.h"
 
-#define FONT_SIZE_DEF 18
+#define FONT_SIZE_DEF 18                // font height
 
 // 'one line file' struct
 typedef struct line line_t;
@@ -19,6 +19,7 @@ struct line {
   unsigned int linesInWindowSize;       // size of line (in Window Lines)
 };
 
+// model view types
 enum modelViewTypes {
   MV_FORMATED = 0,                      // has only vertical scroll
   MV_ORIGINAL = 1                       // has vertical and horizontal scrolls
@@ -33,17 +34,17 @@ struct winDrawer {
 
   line_t* lines;                        // lines pointer (after init: massive)
   unsigned int linesCnt,                // lines count
-               totalLinesInWin;         // total different lines count
+    totalLinesInWin;         // total different lines count
 
-  // SCROLL params (client area position)
+// SCROLL params (client area position)
   char modelViewType;                   // model view type (watch 'modelViewTypes')
   unsigned int lineStart;               // number of line, where placed started subline
   // 'MV_FORMATED' param
   unsigned int sublineStart;            // number of started subline in line
   unsigned int yScrollCoord;            // vertical scroll coord (after reparse)
-  // 'ORIGINAL' params
+  // 'MV_ORIGINAL' params
   unsigned int maxLineLength,           // maximum of lines length
-               xScrollCoord;            // horizontal scroll coord (after reparse)
+    xScrollCoord;            // horizontal scroll coord (after reparse)
 };
 
 
@@ -57,8 +58,9 @@ int WD_Init(winDrawer_t* wd, textReader_t tr, int winW, int winH, HWND hwnd);
 
 // switch model view type
 // ARGS: winDrawer_t *wd - model view to switch type
+//       HWND hwnd - window
 // RETURNS: none
-void WD_SwitchType(winDrawer_t* wd);
+void WD_SwitchType(winDrawer_t* wd, HWND hwnd);
 
 
 // model view update sizes after resize
@@ -94,6 +96,13 @@ void WD_ShiftTextPosition(winDrawer_t* wd, unsigned int linesToShift, int shiftT
 //       int shiftType - '-1' - shift right, '1' - shift left
 // RETURNS: none.
 void WD_ShiftLineStart(winDrawer_t* wd, unsigned int charsToShift, int shiftType);
+
+
+// replace scrolls positions function
+// ARGS: winDrawer_t wd - model view to use
+//       HWND hwnd - window with scrolls
+// RETURNS: none.
+void WD_ReplaceScrolls(HWND hwnd, winDrawer_t wd);
 
 
 // draw text function

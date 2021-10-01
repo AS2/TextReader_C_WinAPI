@@ -1,8 +1,13 @@
 #include "winDrawer.h"
 
-#define MIN(A, B) A > B ? B : A
-#define MAX(A, B) A > B ? A : B
+#define MIN(A, B) A > B ? B : A   // get min preprocessor func
+#define MAX(A, B) A > B ? A : B   // get max preprocessor func
 
+// model view initialization function
+// ARGS: winDrawer_t *wd - model view to init
+//       int winW, winH - window sizes
+//       HWND hwnd - window
+// RETURNS: 0 - fail, 1 - success
 int WD_Init(winDrawer_t* wd, textReader_t tr, int winW, int winH, HWND hwnd) {
   int i, lastBeginIndex = 0, lineIndex = 0, linesInReserv = 0, wasCharacter = 0;
 
@@ -26,27 +31,33 @@ int WD_Init(winDrawer_t* wd, textReader_t tr, int winW, int winH, HWND hwnd) {
     wd->lines = NULL;
   }
   else {
+    // count different lines in file
     wd->linesCnt = 0;
     for (i = 0; tr.textBuf[i] != 0; i++) {
+      // if saw character - add lines count from reserve
       if (wasCharacter == 0 && tr.textBuf[i] != '\n') {
         wd->linesCnt += linesInReserv;
         linesInReserv = 0;
         wasCharacter = 1;
       }
+      // if saw line shift without any symbols before - increase lines in reserve to 1
       else if (wasCharacter == 0 && tr.textBuf[i] == '\n') {
         linesInReserv++;
       }
+      // if saw line shift without some symbols before - increase lines to 1
       else if (wasCharacter == 1 && tr.textBuf[i] == '\n') {
         wasCharacter = 0;
         wd->linesCnt++;
       }
     }
+    // increase lines cnt if last symbol was character
     if (wasCharacter == 1)
       wd->linesCnt++;
 
     if ((wd->lines = (line_t*)malloc(sizeof(line_t) * wd->linesCnt)) == NULL)
       return 0;
 
+    // parse lines
     for (i = 0; tr.textBuf[i] != 0 && lineIndex < wd->linesCnt; i++)
       if (tr.textBuf[i] == '\n') {
         wd->lines[lineIndex].lineBegin = &(tr.textBuf[lastBeginIndex]);
@@ -63,21 +74,43 @@ int WD_Init(winDrawer_t* wd, textReader_t tr, int winW, int winH, HWND hwnd) {
   wd->sublineStart = wd->lineStart =
     wd->xScrollCoord = wd->yScrollCoord = 0;
 
+  // set MV_FORMATED model view type as default
   wd->modelViewType = MV_FORMATED;
 
   return 1;
 }
 
-void WD_SwitchType(winDrawer_t* wd) {
+// switch model view type
+// ARGS: winDrawer_t *wd - model view to switch type
+//       HWND hwnd - window
+// RETURNS: none
+void WD_SwitchType(winDrawer_t* wd, HWND hwnd) {
+  RECT rect;
+
   if (wd->modelViewType == MV_FORMATED) {
     wd->modelViewType = MV_ORIGINAL;
+    wd->xScrollCoord = 0;
+
+    ShowScrollBar(hwnd, SB_HORZ, TRUE);
+    GetWindowRect(hwnd, &rect);
+    WD_UpdateSizes(wd, rect.right - rect.left, rect.bottom - rect.top);
+    ShowScrollBar(hwnd, SB_HORZ, FALSE);
   }
   else {
     wd->modelViewType = MV_FORMATED;
     wd->sublineStart = 0;
+
+    ShowScrollBar(hwnd, SB_HORZ, FALSE);
+    GetWindowRect(hwnd, &rect);
+    WD_UpdateSizes(wd, rect.right - rect.left, rect.bottom - rect.top);
+    ShowScrollBar(hwnd, SB_HORZ, TRUE);
   }
 }
 
+// model view update sizes after resize
+// ARGS: winDrawer_t *wd - model view to update
+//       int newW, newH - new window sizes
+// RETURNS: none
 void WD_UpdateSizes(winDrawer_t* wd, int newW, int newH) {
   if (newW <= 0 || newH <= 0)
     return;
@@ -88,6 +121,9 @@ void WD_UpdateSizes(winDrawer_t* wd, int newW, int newH) {
   wd->newH = newH;
 }
 
+// is text need to be reparsed check function
+// ARGS: winDrawer_t wd - model view to check
+// RETURNS: 0 - not need, 1 - need to reparse
 int WD_IsNeedToReparse(winDrawer_t wd) {
   int oSymbPerH = wd.oldH / (FONT_SIZE_DEF), oSymbPerW = wd.oldW / (int)(FONT_SIZE_DEF / 2),
     nSymbPerH = wd.newH / (FONT_SIZE_DEF), nSymbPerW = wd.newW / (int)(FONT_SIZE_DEF / 2);
@@ -97,6 +133,11 @@ int WD_IsNeedToReparse(winDrawer_t wd) {
   return 0;
 }
 
+// shift vertical text position in 'MV_FORMATED' mode static function.
+// ARGS: winDrawer_t *wd - model view with text to shift
+//       unsigned int linesToShift - line to shift
+//       int shiftType - '-1' - shift up, '1' - shift down
+// RETURNS: none.
 static void WD_ShiftTextPosition_Formated(winDrawer_t* wd, unsigned int linesToShift, int shiftType) {
   int i = 0;
 
@@ -124,6 +165,11 @@ static void WD_ShiftTextPosition_Formated(winDrawer_t* wd, unsigned int linesToS
   }
 }
 
+// shift vertical text position in 'MV_ORIGINAL' mode static function.
+// ARGS: winDrawer_t *wd - model view with text to shift
+//       unsigned int linesToShift - line to shift
+//       int shiftType - '-1' - shift up, '1' - shift down
+// RETURNS: none.
 static void WD_ShiftTextPosition_Original(winDrawer_t* wd, unsigned int linesToShift, int shiftType) {
   int i = 0;
 
@@ -143,6 +189,11 @@ static void WD_ShiftTextPosition_Original(winDrawer_t* wd, unsigned int linesToS
   }
 }
 
+// shift vertical text position
+// ARGS: winDrawer_t *wd - model view with text to shift
+//       unsigned int linesToShift - line to shift
+//       int shiftType - '-1' - shift up, '1' - shift down
+// RETURNS: none.
 void WD_ShiftTextPosition(winDrawer_t* wd, unsigned int linesToShift, int shiftType) {
   if (wd->modelViewType == MV_FORMATED)
     WD_ShiftTextPosition_Formated(wd, linesToShift, shiftType);
@@ -150,6 +201,11 @@ void WD_ShiftTextPosition(winDrawer_t* wd, unsigned int linesToShift, int shiftT
     WD_ShiftTextPosition_Original(wd, linesToShift, shiftType);
 }
 
+// shift horizontal text position
+// ARGS: winDrawer_t *wd - model view with text to shift
+//       unsigned int charsToShift - chars to shift
+//       int shiftType - '-1' - shift right, '1' - shift left
+// RETURNS: none.
 void WD_ShiftLineStart(winDrawer_t* wd, unsigned int charsToShift, int shiftType) {
   if (shiftType == -1)
     wd->xScrollCoord = MAX(0, wd->xScrollCoord - charsToShift);
@@ -157,6 +213,9 @@ void WD_ShiftLineStart(winDrawer_t* wd, unsigned int charsToShift, int shiftType
     wd->xScrollCoord = MIN(wd->maxLineLength - 1, wd->xScrollCoord + charsToShift);
 }
 
+// reparse text in 'MV_FORMATED' mode static function
+// ARGS: winDrawer_t *wd - model view to reparse
+// RETURNS: none.
 static void WD_ReparseText_Formated(winDrawer_t* wd) {
   unsigned int i;
 
@@ -191,6 +250,9 @@ static void WD_ReparseText_Formated(winDrawer_t* wd) {
   }
 }
 
+// reparse text in 'MV_ORIGINAL' mode static function
+// ARGS: winDrawer_t *wd - model view to reparse
+// RETURNS: none.
 static void WD_ReparseText_Original(winDrawer_t* wd) {
   unsigned int i;
 
@@ -210,6 +272,9 @@ static void WD_ReparseText_Original(winDrawer_t* wd) {
   }
 }
 
+// reparse text mode function
+// ARGS: winDrawer_t *wd - model view to reparse
+// RETURNS: none.
 void WD_ReparseText(winDrawer_t* wd) {
   if (wd->modelViewType == MV_FORMATED)
     WD_ReparseText_Formated(wd);
@@ -217,7 +282,56 @@ void WD_ReparseText(winDrawer_t* wd) {
     WD_ReparseText_Original(wd);
 }
 
+// replace scrolls positions function
+// ARGS: winDrawer_t wd - model view to use
+//       HWND hwnd - window with scrolls
+// RETURNS: none.
+void WD_ReplaceScrolls(HWND hwnd, winDrawer_t wd) {
+  static SCROLLINFO si;
+  static int yLength, yPos;
+
+  if (wd.modelViewType == MV_FORMATED) {
+    yLength = wd.totalLinesInWin - 1;
+    yPos = wd.yScrollCoord;
+    ShowScrollBar(hwnd, SB_HORZ, FALSE);
+  }
+  else {
+    yLength = wd.linesCnt - 1;
+    yPos = wd.lineStart;
+    ShowScrollBar(hwnd, SB_HORZ, TRUE);
+  }
+
+  // fill vert scroll info
+  si.cbSize = sizeof(si);
+  si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+  si.nMin = 0;
+  si.nMax = yLength;
+  si.nPos = yPos;
+  si.nPage = wd.linesInWindow;
+  SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+
+  if (wd.modelViewType == MV_FORMATED)
+    ShowScrollBar(hwnd, SB_HORZ, FALSE);
+  else {
+    // fill horiz scroll info
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+    si.nMin = 0;
+    si.nPos = wd.xScrollCoord;
+    si.nMax = wd.maxLineLength - 1;
+    si.nPage = wd.symbolsPerWindowLine;
+    SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
+  }
+}
+
+// draw text in 'MV_FORMATED' mode static function
+// ARGS: winDrawer_t wd - model view to draw
+//       HWND hwnd - window
+// RETURNS: none.
 static void WD_DrawText_Formated(HWND hwnd, winDrawer_t wd) {
+  if (wd.linesInWindow <= 0)
+    return;
+
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -230,6 +344,11 @@ static void WD_DrawText_Formated(HWND hwnd, winDrawer_t wd) {
 
     if (linesDrawed == wd.linesInWindow)
       break;
+  }
+
+  if (linesDrawed == wd.linesInWindow) {
+    EndPaint(hwnd, &ps);
+    return;
   }
 
   // write remained sublines
@@ -248,7 +367,14 @@ static void WD_DrawText_Formated(HWND hwnd, winDrawer_t wd) {
   EndPaint(hwnd, &ps);
 }
 
+// draw text in 'MV_ORGINAL' mode static function
+// ARGS: winDrawer_t wd - model view to draw
+//       HWND hwnd - window
+// RETURNS: none.
 static void WD_DrawText_Original(HWND hwnd, winDrawer_t wd) {
+  if (wd.linesInWindow <= 0)
+    return;
+
   PAINTSTRUCT ps;
   HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -256,11 +382,11 @@ static void WD_DrawText_Original(HWND hwnd, winDrawer_t wd) {
 
   // write lines
   for (y = wd.lineStart; y < wd.linesCnt; y++) {
-      if (wd.lines[y].lineLength > wd.xScrollCoord)
-        TextOut(hdc, 0, linesDrawed++ * FONT_SIZE_DEF, wd.lines[y].lineBegin + wd.xScrollCoord,
-                MIN(wd.lines[y].lineLength - wd.xScrollCoord, wd.symbolsPerWindowLine));
-      else
-        linesDrawed++;
+    if (wd.lines[y].lineLength > wd.xScrollCoord)
+      TextOut(hdc, 0, linesDrawed++ * FONT_SIZE_DEF, wd.lines[y].lineBegin + wd.xScrollCoord,
+        MIN(wd.lines[y].lineLength - wd.xScrollCoord, wd.symbolsPerWindowLine));
+    else
+      linesDrawed++;
 
 
     if (linesDrawed == wd.linesInWindow)
@@ -270,6 +396,10 @@ static void WD_DrawText_Original(HWND hwnd, winDrawer_t wd) {
   EndPaint(hwnd, &ps);
 }
 
+// draw text function
+// ARGS: winDrawer_t wd - model view to draw
+//       HWND hwnd - window
+// RETURNS: none.
 void WD_DrawText(HWND hwnd, winDrawer_t wd) {
   if (wd.modelViewType == MV_FORMATED)
     WD_DrawText_Formated(hwnd, wd);
@@ -277,6 +407,9 @@ void WD_DrawText(HWND hwnd, winDrawer_t wd) {
     WD_DrawText_Original(hwnd, wd);
 }
 
+// model view destroy
+// ARGS: winDrawer_t *wd - model view to destroy
+// RETURNS: none.
 void WD_Destroy(winDrawer_t* wd) {
   if (wd->lines != NULL)
     free(wd->lines);
