@@ -8,13 +8,13 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include "menu/defMenu.h"
+
 #include "textReader/textReader.h"
 #include "winDrawer/winDrawer.h"
+#include "scroll/scroll.h"
 
-#define SIGN(X) X < 0 ? -1 : 1
-
-#define WIN_W 544
-#define WIN_H 375
+#include "winProc/winProc.h"
 
 /*  Declare Windows procedure  */
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
@@ -42,7 +42,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
   wincl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
   wincl.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
   wincl.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wincl.lpszMenuName = NULL;                 /* No menu */
+  wincl.lpszMenuName = MAKEINTRESOURCE(ID_MYMENU);
   wincl.cbClsExtra = 0;                      /* No extra bytes after the window class */
   wincl.cbWndExtra = 0;                      /* structure or the window instance */
   /* Use Windows's default colour as the background of the window */
@@ -88,149 +88,46 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 /*  This function is called by the Windows function DispatchMessage()  */
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  static textReader_t tr;
-  static winDrawer_t wd;
-  static SCROLLINFO si;
-  static int yLength, yPos;
+  static winProcData_t wpd;
 
   switch (message)                  /* handle the messages */
   {
   case WM_DESTROY: {
-    TR_ClearText(&tr);
-    WD_Destroy(&wd);
-    PostQuitMessage(0);       /* send a WM_QUIT to the message queue */
+    WPD_Destroy(hwnd, wParam, lParam, &wpd);
     break;
   }
 
-                 // Load file then create window
   case WM_CREATE: {
-    CREATESTRUCT* tmpStrct = (CREATESTRUCT*)lParam;
-
-    //if (TR_InitText(&tr, "orwell.txt") == 0) {
-    if (TR_InitText(&tr, (char*)tmpStrct->lpCreateParams) == 0) {
-      MessageBox(hwnd, _T("Can't load file to read!"), _T("Error"), MB_ICONERROR);
-      PostQuitMessage(0);
-    }
-
-    if (WD_Init(&wd, tr, WIN_W, WIN_H, hwnd) == 0) {
-      MessageBox(hwnd, _T("Can't parse file into lines!"), _T("Error"), MB_ICONERROR);
-      PostQuitMessage(0);
-    }
-
-    WD_ReplaceScrolls(hwnd, wd);
+    WPD_Create(hwnd, wParam, lParam, &wpd);
     break;
   }
 
   case WM_VSCROLL: {
-    si.fMask = SIF_ALL;
-    GetScrollInfo(hwnd, SB_VERT, &si);
-    int scrPos = si.nPos;
-
-    switch (LOWORD(wParam)) {
-    case SB_LINEUP:
-      si.nPos -= 1;
-      break;
-    case SB_LINEDOWN:
-      si.nPos += 1;
-      break;
-    case SB_PAGEUP:
-      si.nPos -= si.nPage;
-      break;
-    case SB_PAGEDOWN:
-      si.nPos += si.nPage;
-      break;
-    case SB_THUMBTRACK:
-      si.nPos = si.nTrackPos;
-      break;
-    default:
-      break;
-    }
-
-    si.fMask = SIF_POS;
-    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-    GetScrollInfo(hwnd, SB_VERT, &si);
-
-    if (si.nPos != scrPos) {
-      int sign = SIGN(si.nPos - scrPos);
-      WD_ShiftTextPosition(&wd, (si.nPos - scrPos) * sign, sign);
-      InvalidateRect(hwnd, NULL, TRUE);
-      UpdateWindow(hwnd);
-    }
+    WPD_VScrollUpdate(hwnd, wParam, lParam, &wpd);
     break;
   }
 
   case WM_HSCROLL: {
-    si.fMask = SIF_ALL;
-    GetScrollInfo(hwnd, SB_HORZ, &si);
-    int scrPos = si.nPos;
-
-    switch (LOWORD(wParam)) {
-    case SB_LINELEFT:
-      si.nPos -= 1;
-      break;
-    case SB_LINERIGHT:
-      si.nPos += 1;
-      break;
-    case SB_PAGELEFT:
-      si.nPos -= si.nPage;
-      break;
-    case SB_PAGERIGHT:
-      si.nPos += si.nPage;
-      break;
-    case SB_THUMBTRACK:
-      si.nPos = si.nTrackPos;
-      break;
-    default:
-      break;
-    }
-
-    si.fMask = SIF_POS;
-    SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-    GetScrollInfo(hwnd, SB_HORZ, &si);
-
-    if (si.nPos != scrPos) {
-      int sign = SIGN(si.nPos - scrPos);
-      WD_ShiftLineStart(&wd, (si.nPos - scrPos) * sign, sign);
-      InvalidateRect(hwnd, NULL, TRUE);
-      UpdateWindow(hwnd);
-    }
+    WPD_HScrollUpdate(hwnd, wParam, lParam, &wpd);
     break;
   }
 
   case WM_KEYDOWN: {
-    switch (wParam) {
-    case 'S':
-    case 's':
-      WD_SwitchType(&wd, hwnd);
-      WD_ReparseText(&wd);
-
-      WD_ReplaceScrolls(hwnd, wd);
-      // draw text
-      InvalidateRect(hwnd, NULL, TRUE);
-      UpdateWindow(hwnd);
-    }
+    WPD_KeyDown(hwnd, wParam, lParam, &wpd);
     break;
   }
 
-                 // Load text to draw then resize window
+  case WM_COMMAND: {
+    WPD_Command(hwnd, wParam, lParam, &wpd);
+    break;
+  }
+
   case WM_SIZE: {
-    WD_UpdateSizes(&wd, LOWORD(lParam), HIWORD(lParam));
-
-    // reread, if params changed
-    if (WD_IsNeedToReparse(wd) == 1) {
-      // repars symbols
-      WD_ReparseText(&wd);
-
-      WD_ReplaceScrolls(hwnd, wd);
-
-      // draw text
-      InvalidateRect(hwnd, NULL, TRUE);
-      UpdateWindow(hwnd);
-    }
+    WPD_Size(hwnd, wParam, lParam, &wpd);
     break;
   }
   case WM_PAINT: {
-    WD_DrawText(hwnd, wd);
+    WPD_Paint(hwnd, wParam, lParam, &wpd);
     break;
   }
 

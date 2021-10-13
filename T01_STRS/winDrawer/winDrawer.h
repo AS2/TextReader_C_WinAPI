@@ -4,7 +4,6 @@
 #include <windows.h>
 #include <tchar.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "../textReader/textReader.h"
@@ -34,9 +33,9 @@ struct winDrawer {
 
   line_t* lines;                        // lines pointer (after init: massive)
   unsigned int linesCnt,                // lines count
-    totalLinesInWin;         // total different lines count
+               totalLinesInWin;         // total different lines count
 
-// SCROLL params (client area position)
+  // SCROLL params (client area position)
   char modelViewType;                   // model view type (watch 'modelViewTypes')
   unsigned int lineStart;               // number of line, where placed started subline
   // 'MV_FORMATED' param
@@ -96,13 +95,6 @@ void WD_ShiftTextPosition(winDrawer_t* wd, unsigned int linesToShift, int shiftT
 //       int shiftType - '-1' - shift right, '1' - shift left
 // RETURNS: none.
 void WD_ShiftLineStart(winDrawer_t* wd, unsigned int charsToShift, int shiftType);
-
-
-// replace scrolls positions function
-// ARGS: winDrawer_t wd - model view to use
-//       HWND hwnd - window with scrolls
-// RETURNS: none.
-void WD_ReplaceScrolls(HWND hwnd, winDrawer_t wd);
 
 
 // draw text function

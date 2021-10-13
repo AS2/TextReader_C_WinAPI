@@ -1,26 +1,28 @@
 # depslib dependency file v1.0
-1633120291 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\main.c
+1634147094 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\main.c
 	<tchar.h>
 	<windows.h>
 	<stdio.h>
+	"menu/defMenu.h"
 	"textReader/textReader.h"
 	"winDrawer/winDrawer.h"
+	"scroll/scroll.h"
+	"winProc/winProc.h"
 
-1633125314 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.h
+1634144582 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.h
 	<stdio.h>
 	<stdlib.h>
 
-1633125298 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.h
+1634157592 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.h
 	<windows.h>
 	<tchar.h>
-	<stdio.h>
 	<stdlib.h>
 	"../textReader/textReader.h"
 
-1633115381 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.c
+1634161808 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader\textreader.c
 	"textReader.h"
 
-1633125329 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.c
+1634161825 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer\windrawer.c
 	"winDrawer.h"
 
 1631897723 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\textreader.c
@@ -52,4 +54,28 @@
 
 1631820070 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\windrawer.cpp
 	"winDrawer.h"
+
+1634141369 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\menu\menu.rc
+	"defMenu.h"
+
+1634141351 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\menu\defmenu.h
+
+1634161791 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\scroll\scroll.c
+	"scroll.h"
+
+1634161845 source:c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\winproc\winproc.c
+	"winProc.h"
+
+1634145233 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\scroll\scroll.h
+	<windows.h>
+	<tchar.h>
+	<stdio.h>
+	<stdlib.h>
+	"../winDrawer/winDrawer.h"
+
+1634147115 c:\users\alex\desktop\Ó÷åáà\Ïðîãðàììèðîâàíèå\5 ÑÅÌ\ÏÈ\t01_strs\winproc\winproc.h
+	"../menu/defMenu.h"
+	"../textReader/textReader.h"
+	"../scroll/scroll.h"
+	"../winDrawer/winDrawer.h"
 

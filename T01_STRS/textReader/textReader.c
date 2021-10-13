@@ -30,4 +30,5 @@ int TR_InitText(textReader_t* tr, const char* filename) {
 void TR_ClearText(textReader_t* tr) {
     if (tr->textBuf != NULL)
         free(tr->textBuf);
+    tr->charsReaden = 0;
 }

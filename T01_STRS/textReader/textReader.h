@@ -1,5 +1,6 @@
-#ifndef __text_reader_h__#ifndef __text_reader_h__
+#ifndef __text_reader_h__
 #define __text_reader_h__
+
 #include <stdio.h>
 #include <stdlib.h>
 

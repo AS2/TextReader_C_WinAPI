@@ -244,7 +244,7 @@ static void WD_ReparseText_Formated(winDrawer_t* wd) {
   wd->yScrollCoord += wd->sublineStart;
 
   // shift strings down to remove empty space, which created at the end of file
-  if (wd->totalLinesInWin - wd->yScrollCoord < wd->linesInWindow) {
+  if (wd->totalLinesInWin - wd->yScrollCoord < wd->linesInWindow && wd->totalLinesInWin > wd->linesInWindow) {
     WD_ShiftTextPosition_Formated(wd, wd->linesInWindow - (wd->totalLinesInWin - wd->yScrollCoord), -1);
     wd->yScrollCoord = MAX(wd->yScrollCoord - (wd->linesInWindow - (wd->totalLinesInWin - wd->yScrollCoord)), 0);
   }
@@ -260,13 +260,13 @@ static void WD_ReparseText_Original(winDrawer_t* wd) {
   wd->linesInWindow = wd->newH / (FONT_SIZE_DEF);
 
   // shift strings down to remove empty space, which created at the end of file
-  if (wd->linesCnt - wd->lineStart < wd->linesInWindow) {
+  if (wd->linesCnt - wd->lineStart < wd->linesInWindow && wd->linesCnt > wd->linesInWindow) {
     WD_ShiftTextPosition_Original(wd, wd->linesInWindow - (wd->linesCnt - wd->lineStart), -1);
     wd->lineStart = MAX(0, wd->lineStart - (wd->linesInWindow - (wd->linesCnt - wd->lineStart)));
   }
 
   // shift strings right to remove empty space, which created at the right of client area
-  if (wd->maxLineLength - wd->xScrollCoord < wd->symbolsPerWindowLine) {
+  if (wd->maxLineLength - wd->xScrollCoord < wd->symbolsPerWindowLine && wd->maxLineLength > wd->symbolsPerWindowLine) {
     WD_ShiftLineStart(wd, wd->symbolsPerWindowLine - (wd->maxLineLength - wd->xScrollCoord), -1);
     wd->xScrollCoord = MAX(0, wd->xScrollCoord - (wd->symbolsPerWindowLine - (wd->maxLineLength - wd->xScrollCoord)));
   }
@@ -280,48 +280,6 @@ void WD_ReparseText(winDrawer_t* wd) {
     WD_ReparseText_Formated(wd);
   else
     WD_ReparseText_Original(wd);
-}
-
-// replace scrolls positions function
-// ARGS: winDrawer_t wd - model view to use
-//       HWND hwnd - window with scrolls
-// RETURNS: none.
-void WD_ReplaceScrolls(HWND hwnd, winDrawer_t wd) {
-  static SCROLLINFO si;
-  static int yLength, yPos;
-
-  if (wd.modelViewType == MV_FORMATED) {
-    yLength = wd.totalLinesInWin - 1;
-    yPos = wd.yScrollCoord;
-    ShowScrollBar(hwnd, SB_HORZ, FALSE);
-  }
-  else {
-    yLength = wd.linesCnt - 1;
-    yPos = wd.lineStart;
-    ShowScrollBar(hwnd, SB_HORZ, TRUE);
-  }
-
-  // fill vert scroll info
-  si.cbSize = sizeof(si);
-  si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-  si.nMin = 0;
-  si.nMax = yLength;
-  si.nPos = yPos;
-  si.nPage = wd.linesInWindow;
-  SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-
-  if (wd.modelViewType == MV_FORMATED)
-    ShowScrollBar(hwnd, SB_HORZ, FALSE);
-  else {
-    // fill horiz scroll info
-    si.cbSize = sizeof(si);
-    si.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
-    si.nMin = 0;
-    si.nPos = wd.xScrollCoord;
-    si.nMax = wd.maxLineLength - 1;
-    si.nPage = wd.symbolsPerWindowLine;
-    SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-  }
 }
 
 // draw text in 'MV_FORMATED' mode static function
@@ -413,4 +371,6 @@ void WD_DrawText(HWND hwnd, winDrawer_t wd) {
 void WD_Destroy(winDrawer_t* wd) {
   if (wd->lines != NULL)
     free(wd->lines);
+  wd->linesCnt = wd->totalLinesInWin =
+    wd->totalLinesInWin = wd->totalLinesInWin = 0;
 }

@@ -37,10 +37,19 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 			<Add library="comctl32" />
+			<Add library="comdlg32" />
 		</Linker>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="menu/defMenu.h" />
+		<Unit filename="menu/menu.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="scroll/scroll.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="scroll/scroll.h" />
 		<Unit filename="textReader/textReader.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -49,6 +58,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="winDrawer/winDrawer.h" />
+		<Unit filename="winProc/winProc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="winProc/winProc.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
