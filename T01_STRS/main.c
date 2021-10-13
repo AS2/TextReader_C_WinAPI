@@ -92,44 +92,37 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
   switch (message)                  /* handle the messages */
   {
-  case WM_DESTROY: {
+  case WM_DESTROY:
     WPD_Destroy(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
-  case WM_CREATE: {
+  case WM_CREATE:
     WPD_Create(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
-  case WM_VSCROLL: {
+  case WM_VSCROLL:
     WPD_VScrollUpdate(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
-  case WM_HSCROLL: {
+  case WM_HSCROLL:
     WPD_HScrollUpdate(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
-  case WM_KEYDOWN: {
+  case WM_KEYDOWN:
     WPD_KeyDown(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
-  case WM_COMMAND: {
+  case WM_COMMAND:
     WPD_Command(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
-  case WM_SIZE: {
+  case WM_SIZE:
     WPD_Size(hwnd, wParam, lParam, &wpd);
     break;
-  }
-  case WM_PAINT: {
+
+  case WM_PAINT:
     WPD_Paint(hwnd, wParam, lParam, &wpd);
     break;
-  }
 
   default:                      /* for messages that we don't deal with */
     return DefWindowProc(hwnd, message, wParam, lParam);
