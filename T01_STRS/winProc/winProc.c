@@ -19,14 +19,83 @@ void WPD_Create(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
     PostQuitMessage(0);
   }
 
-  if (WD_Init(&(wpd->wd), wpd->tr, WIN_W, WIN_H, hwnd) == 0) {
+  RECT rect;
+  GetClientRect(hwnd, &rect);
+
+  if (WD_Init(&(wpd->wd), wpd->tr, rect.right - rect.left, rect.bottom - rect.top, hwnd) == 0) {
     TR_ClearText(&(wpd->tr));
     MessageBox(hwnd, _T("Can't parse file into lines!"), _T("Error"), MB_ICONERROR);
     PostQuitMessage(0);
   }
 
   wpd->isInit = WPD_INIT;
+  WD_ReparseText(&(wpd->wd));
   SC_ReplaceScrolls(hwnd, wpd->wd);
+}
+
+
+// Vertical scroll processor
+// ARGS: HWND hwnd - window
+//       int shift - vertical shift size
+//       winProcData_t *wpd - window process data
+// RETURNS: none.
+static void WPD_VertScroll(HWND hwnd, int shift, winProcData_t *wpd) {
+  if (wpd->isInit == WPD_NOT_INIT)
+    return;
+
+  unsigned int yScrollSize = wpd->wd.modelViewType == MV_FORMATED ? wpd->wd.totalLinesInWin : wpd->wd.linesCnt,
+               yScrollPos = wpd->wd.modelViewType == MV_FORMATED ? wpd->wd.yScrollCoord : wpd->wd.lineStart;
+
+  // no need to scroll - all lines can fit in window
+  if (yScrollSize < wpd->wd.linesInWindow)
+    return;
+
+  int sign = SIGN(shift);
+
+  if (sign < 0 && shift * sign > yScrollPos)
+      shift = sign * yScrollPos;
+  else if (sign > 0 && shift * sign > ((signed int)yScrollSize - (signed int)wpd->wd.linesInWindow - (signed int)yScrollPos))
+      shift = (signed int)yScrollSize - (signed int)wpd->wd.linesInWindow - (signed int)yScrollPos;
+
+  if (shift != 0) {
+    WD_ShiftTextPosition(&(wpd->wd), (shift) * sign, sign);
+
+    SC_ReplaceScrolls(hwnd, wpd->wd);
+
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+  }
+}
+
+
+// Horizontal scroll processor
+// ARGS: HWND hwnd - window
+//       int shift - vertical shift size
+//       winProcData_t *wpd - window process data
+// RETURNS: none.
+static void WPD_HorzScroll(HWND hwnd, int shift, winProcData_t *wpd) {
+  if (wpd->isInit == WPD_NOT_INIT)
+    return;
+
+  int sign = SIGN(shift);
+
+  // no need to scroll - all lines can fit in window
+  if (wpd->wd.maxLineLength < wpd->wd.symbolsPerWindowLine)
+    return;
+
+  if (sign < 0 && shift * sign > wpd->wd.xScrollCoord)
+      shift = (-1) * (signed int)wpd->wd.xScrollCoord;
+  else if (sign > 0 && shift * sign > (signed int)wpd->wd.maxLineLength - (signed int)wpd->wd.symbolsPerWindowLine - (signed int)wpd->wd.xScrollCoord)
+      shift = (signed int)wpd->wd.maxLineLength - (signed int)wpd->wd.symbolsPerWindowLine - (signed int)wpd->wd.xScrollCoord;
+
+  if (shift != 0) {
+    WD_ShiftLineStart(&(wpd->wd), shift * sign, sign);
+
+    SC_ReplaceScrolls(hwnd, wpd->wd);
+
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+  }
 }
 
 
@@ -39,42 +108,30 @@ void WPD_HScrollUpdate(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *w
   if (wpd->isInit == WPD_NOT_INIT)
     return;
 
-  SCROLLINFO si;
-
-  si.fMask = SIF_ALL;
-  GetScrollInfo(hwnd, SB_HORZ, &si);
-  int scrPos = si.nPos;
+  int shift = 0, newPos;
 
   switch (LOWORD(wParam)) {
   case SB_LINELEFT:
-    si.nPos -= 1;
+    shift = -1;
     break;
   case SB_LINERIGHT:
-    si.nPos += 1;
+    shift = 1;
     break;
   case SB_PAGELEFT:
-    si.nPos -= si.nPage;
+    shift = -1 * (signed int)(wpd->wd.symbolsPerWindowLine);
     break;
   case SB_PAGERIGHT:
-    si.nPos += si.nPage;
+    shift = wpd->wd.symbolsPerWindowLine;
     break;
   case SB_THUMBTRACK:
-    si.nPos = si.nTrackPos;
+    newPos = HIWORD(wParam) / wpd->wd.xScrollScale;
+    shift = newPos - wpd->wd.xScrollCoord;
     break;
   default:
     break;
   }
 
-  si.fMask = SIF_POS;
-  SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-  GetScrollInfo(hwnd, SB_HORZ, &si);
-
-  if (si.nPos != scrPos) {
-    int sign = SIGN(si.nPos - scrPos);
-    WD_ShiftLineStart(&(wpd->wd), (si.nPos - scrPos) * sign, sign);
-    InvalidateRect(hwnd, NULL, TRUE);
-    UpdateWindow(hwnd);
-  }
+  WPD_HorzScroll(hwnd, shift, wpd);
 }
 
 
@@ -87,42 +144,31 @@ void WPD_VScrollUpdate(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *w
   if (wpd->isInit == WPD_NOT_INIT)
     return;
 
-  SCROLLINFO si;
-
-  si.fMask = SIF_ALL;
-  GetScrollInfo(hwnd, SB_VERT, &si);
-  int scrPos = si.nPos;
+  int shift = 0, newPos;
+  unsigned int yScrollPos = wpd->wd.modelViewType == MV_FORMATED ? wpd->wd.yScrollCoord : wpd->wd.lineStart;
 
   switch (LOWORD(wParam)) {
   case SB_LINEUP:
-    si.nPos -= 1;
+    shift = -1;
     break;
   case SB_LINEDOWN:
-    si.nPos += 1;
+    shift = 1;
     break;
   case SB_PAGEUP:
-    si.nPos -= si.nPage;
+    shift = -1 * (signed int)(wpd->wd.linesInWindow);
     break;
   case SB_PAGEDOWN:
-    si.nPos += si.nPage;
+    shift = wpd->wd.linesInWindow;
     break;
   case SB_THUMBTRACK:
-    si.nPos = si.nTrackPos;
+    newPos = HIWORD(wParam) / wpd->wd.yScrollScale;
+    shift = newPos - yScrollPos;
     break;
   default:
     break;
   }
 
-  si.fMask = SIF_POS;
-  SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-  GetScrollInfo(hwnd, SB_VERT, &si);
-
-  if (si.nPos != scrPos) {
-    int sign = SIGN(si.nPos - scrPos);
-    WD_ShiftTextPosition(&(wpd->wd), (si.nPos - scrPos) * sign, sign);
-    InvalidateRect(hwnd, NULL, TRUE);
-    UpdateWindow(hwnd);
-  }
+  WPD_VertScroll(hwnd, shift, wpd);
 }
 
 
@@ -162,7 +208,7 @@ static void OpenNewTxt(HWND hwnd, winProcData_t *wpd) {
     }
 
     RECT rect;
-    GetWindowRect(hwnd, &rect);
+    GetClientRect(hwnd, &rect);
 
     if (WD_Init(&(wpd->wd), wpd->tr, rect.right - rect.left, rect.bottom - rect.top, hwnd) == 0) {
       TR_ClearText(&(wpd->tr));
@@ -174,6 +220,10 @@ static void OpenNewTxt(HWND hwnd, winProcData_t *wpd) {
 
     WD_ReparseText(&(wpd->wd));
     SC_ReplaceScrolls(hwnd, wpd->wd);
+
+
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
   }
 
   return;
@@ -230,9 +280,7 @@ void WPD_KeyDown(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
   if (wpd->isInit == WPD_NOT_INIT)
     return;
 
-  SCROLLINFO si;
-  si.fMask = SIF_ALL;
-  int scrPos;
+  int shift = 0;
 
   switch (wParam) {
     // horiz scroll navigation
@@ -241,20 +289,9 @@ void WPD_KeyDown(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
       if(wpd->wd.modelViewType == MV_FORMATED)
         return;
 
-      GetScrollInfo(hwnd, SB_HORZ, &si);
-      scrPos = si.nPos;
+      shift = (wParam == VK_RIGHT ? 1 : -1);
 
-      si.nPos += (wParam == VK_RIGHT ? 1 : -1);
-
-      si.fMask = SIF_POS;
-      SetScrollInfo(hwnd, SB_HORZ, &si, TRUE);
-      GetScrollInfo(hwnd, SB_HORZ, &si);
-
-      if (si.nPos != scrPos) {
-        WD_ShiftLineStart(&(wpd->wd), 1, (wParam == VK_RIGHT ? 1 : -1));
-        InvalidateRect(hwnd, NULL, TRUE);
-        UpdateWindow(hwnd);
-      }
+      WPD_HorzScroll(hwnd, shift, wpd);
       return;
 
     // vert scroll navigation
@@ -262,31 +299,32 @@ void WPD_KeyDown(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
     case VK_DOWN:
     case VK_PRIOR:
     case VK_NEXT:
-
-      GetScrollInfo(hwnd, SB_VERT, &si);
-      scrPos = si.nPos;
-
       if (wParam == VK_DOWN)
-        si.nPos += 1;
+        shift = 1;
       else if (wParam == VK_UP)
-        si.nPos -= 1;
+        shift = -1;
       else if (wParam == VK_PRIOR)
-        si.nPos -= si.nPage;
+        shift = -1 * (signed int)wpd->wd.linesInWindow;
       else
-        si.nPos += si.nPage;
+        shift = (signed int)wpd->wd.linesInWindow;
 
-      si.fMask = SIF_POS;
-      SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-      GetScrollInfo(hwnd, SB_VERT, &si);
-
-      if (si.nPos != scrPos) {
-        int sign = SIGN(si.nPos - scrPos);
-        WD_ShiftTextPosition(&(wpd->wd), (si.nPos - scrPos) * sign, sign);
-        InvalidateRect(hwnd, NULL, TRUE);
-        UpdateWindow(hwnd);
-      }
+      WPD_VertScroll(hwnd, shift, wpd);
       return;
   }
+}
+
+
+// 'WM_MOUSEWHEEL' processor
+// ARGS: HWND hwnd - window
+//       WPARAM wParam,
+//       LPARAM lParam - message parameters
+// RETURNS: none
+void WPD_MouseWheel(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
+  if (wpd->isInit == WPD_NOT_INIT)
+    return;
+
+  int shift = -1 * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+  WPD_VertScroll(hwnd, shift, wpd);
 }
 
 
@@ -306,6 +344,7 @@ void WPD_Size(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
     // repars symbols
     WD_ReparseText(&(wpd->wd));
 
+    // reparse scrolls
     SC_ReplaceScrolls(hwnd, wpd->wd);
 
     // draw text

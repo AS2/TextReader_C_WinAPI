@@ -8,15 +8,11 @@
 
 #include "../textReader/textReader.h"
 
+#define MAX_SCROLL_RANGE 65535
 #define FONT_SIZE_DEF 18                // font height
 
-// 'one line file' struct
-typedef struct line line_t;
-struct line {
-  char* lineBegin;                      // line begin pointer
-  unsigned int lineLength;              // line length (in symbols cnt)
-  unsigned int linesInWindowSize;       // size of line (in Window Lines)
-};
+// 'one line from file' typedef
+typedef char* line_t;                   // line begin pointer
 
 // model view types
 enum modelViewTypes {
@@ -33,17 +29,22 @@ struct winDrawer {
 
   line_t* lines;                        // lines pointer (after init: massive)
   unsigned int linesCnt,                // lines count
-               totalLinesInWin;         // total different lines count
+               totalLinesInWin,         // total different lines count
+               lastLineLength;          // last line length
 
   // SCROLL params (client area position)
   char modelViewType;                   // model view type (watch 'modelViewTypes')
   unsigned int lineStart;               // number of line, where placed started subline
+
   // 'MV_FORMATED' param
   unsigned int sublineStart;            // number of started subline in line
   unsigned int yScrollCoord;            // vertical scroll coord (after reparse)
+  float yScrollScale;                   // scale for vertical scroll
+
   // 'MV_ORIGINAL' params
   unsigned int maxLineLength,           // maximum of lines length
-    xScrollCoord;            // horizontal scroll coord (after reparse)
+               xScrollCoord;            // horizontal scroll coord (after reparse)
+  float xScrollScale;                   // scale for horizontal scroll
 };
 
 

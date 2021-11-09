@@ -1,5 +1,7 @@
 #include "textReader.h"
 
+#pragma warning(disable: 4996)
+
 // text view initialization function
 // ARGS: textReader_t *tr - text view to init
 //       const char *filename - file name to open

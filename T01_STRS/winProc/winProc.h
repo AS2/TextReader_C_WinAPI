@@ -64,6 +64,14 @@ void WPD_Command(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd);
 void WPD_KeyDown(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd);
 
 
+// 'WM_MOUSEWHEEL' processor
+// ARGS: HWND hwnd - window
+//       WPARAM wParam,
+//       LPARAM lParam - message parameters
+// RETURNS: none
+void WPD_MouseWheel(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd);
+
+
 // 'WM_SIZE' processor
 // ARGS: HWND hwnd - window
 //       WPARAM wParam,
