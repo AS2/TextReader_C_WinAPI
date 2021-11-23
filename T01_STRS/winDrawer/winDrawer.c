@@ -269,9 +269,13 @@ static void WD_ReparseText_Formated(winDrawer_t* wd) {
   wd->yScrollCoord += wd->sublineStart;
 
   // shift strings down to remove empty space, which created at the end of file
-  if (wd->totalLinesInWin - wd->yScrollCoord < wd->linesInWindow && wd->totalLinesInWin > wd->linesInWindow) {
+  if (wd->totalLinesInWin > wd->linesInWindow && wd->totalLinesInWin - wd->yScrollCoord < wd->linesInWindow) {
     WD_ShiftTextPosition_Formated(wd, wd->linesInWindow - (wd->totalLinesInWin - wd->yScrollCoord), -1);
     wd->yScrollCoord = MAX(wd->yScrollCoord - (wd->linesInWindow - (wd->totalLinesInWin - wd->yScrollCoord)), 0);
+  }
+  else if (wd->totalLinesInWin <= wd->linesInWindow) {
+    WD_ShiftTextPosition_Formated(wd, wd->totalLinesInWin, -1);
+    wd->lineStart = 0;
   }
 
   // update scrolls values
@@ -300,7 +304,7 @@ static void WD_ReparseText_Original(winDrawer_t* wd) {
       wd->xScrollScale = 1;
 
   // shift strings down to remove empty space, which created at the end of file
-  if (wd->linesCnt - wd->lineStart < wd->linesInWindow && wd->linesCnt > wd->linesInWindow) {
+  if (wd->linesCnt > wd->linesInWindow && wd->linesCnt - wd->lineStart < wd->linesInWindow) {
     WD_ShiftTextPosition_Original(wd, wd->linesInWindow - (wd->linesCnt - wd->lineStart), -1);
     wd->lineStart = MAX(0, wd->lineStart - (wd->linesInWindow - (wd->linesCnt - wd->lineStart)));
   }

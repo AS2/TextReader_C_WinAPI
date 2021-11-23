@@ -14,23 +14,24 @@
 void WPD_Create(HWND hwnd, WPARAM wParam, LPARAM lParam, winProcData_t *wpd) {
   CREATESTRUCT* tmpStrct = (CREATESTRUCT*)lParam;
 
-  if (TR_InitText(&(wpd->tr), (char*)tmpStrct->lpCreateParams) == 0) {
-    MessageBox(hwnd, _T("Can't load file to read!"), _T("Error"), MB_ICONERROR);
-    PostQuitMessage(0);
+  if (TR_InitText(&(wpd->tr), (char*)tmpStrct->lpCreateParams) != 0) {
+    RECT rect;
+    GetClientRect(hwnd, &rect);
+
+    if (WD_Init(&(wpd->wd), wpd->tr, rect.right - rect.left, rect.bottom - rect.top, hwnd) == 0) {
+      TR_ClearText(&(wpd->tr));
+      MessageBox(hwnd, _T("Can't parse file into lines!"), _T("Error"), MB_ICONERROR);
+      PostQuitMessage(0);
+    }
+
+    wpd->isInit = WPD_INIT;
+    WD_ReparseText(&(wpd->wd));
+    SC_ReplaceScrolls(hwnd, wpd->wd);
   }
-
-  RECT rect;
-  GetClientRect(hwnd, &rect);
-
-  if (WD_Init(&(wpd->wd), wpd->tr, rect.right - rect.left, rect.bottom - rect.top, hwnd) == 0) {
-    TR_ClearText(&(wpd->tr));
-    MessageBox(hwnd, _T("Can't parse file into lines!"), _T("Error"), MB_ICONERROR);
-    PostQuitMessage(0);
+  else {
+    wpd->isInit = WPD_NOT_INIT;
+    ShowScrollBar(hwnd, SB_VERT, FALSE);
   }
-
-  wpd->isInit = WPD_INIT;
-  WD_ReparseText(&(wpd->wd));
-  SC_ReplaceScrolls(hwnd, wpd->wd);
 }
 
 

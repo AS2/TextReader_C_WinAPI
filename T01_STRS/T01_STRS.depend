@@ -222,3 +222,49 @@
 1636492335 source:c:\users\alex\desktop\t01_strs (without scrollinfo)\winproc\winproc.c
 	"winProc.h"
 
+1636573465 source:c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\main.c
+	<tchar.h>
+	<windows.h>
+	<stdio.h>
+	"winProc/winProc.h"
+
+1636573465 c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\winproc\winproc.h
+	"../menu/defMenu.h"
+	"../textReader/textReader.h"
+	"../scroll/scroll.h"
+	"../winDrawer/winDrawer.h"
+
+1634316785 c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\menu\defmenu.h
+
+1636573860 c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\textreader\textreader.h
+	<stdio.h>
+	<stdlib.h>
+
+1634316785 c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\scroll\scroll.h
+	<windows.h>
+	<tchar.h>
+	<stdio.h>
+	<stdlib.h>
+	"../winDrawer/winDrawer.h"
+
+1636573465 c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\windrawer\windrawer.h
+	<windows.h>
+	<tchar.h>
+	<stdlib.h>
+	"../textReader/textReader.h"
+
+1634316785 source:c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\menu\menu.rc
+	"defMenu.h"
+
+1636573465 source:c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\scroll\scroll.c
+	"scroll.h"
+
+1636573465 source:c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\textreader\textreader.c
+	"textReader.h"
+
+1636573465 source:c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\windrawer\windrawer.c
+	"winDrawer.h"
+
+1637415075 source:c:\users\alexs\onedrive\Документы\github\textreader_c_winapi\t01_strs\winproc\winproc.c
+	"winProc.h"
+
